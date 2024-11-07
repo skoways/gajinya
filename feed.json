@@ -1,0 +1,13 @@
+{
+    "version": "https://jsonfeed.org/version/1",
+    "title": "Gajinya",
+    "description": "",
+    "home_page_url": "https://skoways.github.io/gajinya",
+    "feed_url": "https://skoways.github.io/gajinya/feed.json",
+    "user_comment": "",
+    "author": {
+        "name": "Admin"
+    },
+    "items": [
+    ]
+}
