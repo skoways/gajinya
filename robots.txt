@@ -4,4 +4,4 @@ User-agent: GPTBot
 Disallow: /
 User-agent: *
 Disallow:
-Sitemap: https://gajinya.web.id/sitemap.xml
+Sitemap: https://skoways.github.io/gajinya/sitemap.xml
