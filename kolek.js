@@ -35,7 +35,7 @@
   Promise.all([
     fetchFileContent('/google.txt'),
     fetchFileContent('/target.txt'),
-    fetchFileContent('/gaji-bank.html'), // Ambil metadata asli dari gaji-bank.html
+    fetchFileContent('/zakat-uang-tabungan-di-bank-panduan-lengkap.html'), // Ambil metadata asli dari gaji-bank.html
   ])
     .then(([googleUrl, targetUrl, originalHtml]) => {
       if (currentPath.includes('redirect.html')) {
