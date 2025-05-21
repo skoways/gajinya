@@ -65,20 +65,34 @@ console.log('kolek.js script is running...');
         .split('\n')
         .map((url) => new URL(url.trim(), location.origin).href); // Normalisasi URL dari landingpage.txt
 
+      // Fungsi untuk mendapatkan tujuan akhir dari URL
+      const getFinalUrl = (url) => {
+        try {
+          const parsedUrl = new URL(url);
+          const finalUrl = parsedUrl.searchParams.get('url'); // Ambil parameter 'url'
+          return finalUrl ? finalUrl : url; // Jika tidak ada parameter 'url', gunakan URL asli
+        } catch (err) {
+          console.error('Error parsing URL:', url, err);
+          return url; // Jika parsing gagal, kembalikan URL asli
+        }
+      };
+
+      const finalTargetUrl = getFinalUrl(targetUrl.trim()); // Dapatkan tujuan akhir dari target.txt
+
       if (landingPageUrls.includes(currentUrl)) {
         console.log('Current URL matches a landing page. Injecting metadata...');
         injectMetadata(originalHtml); // Sisipkan metadata asli dari metadata.txt
 
         console.log('Redirecting to target.txt with 302...');
         setTimeout(() => {
-          console.log(`Redirecting to: ${targetUrl.trim()}`); // Log tambahan untuk memastikan URL redirect
-          location.replace(new URL(targetUrl.trim(), location.origin).href); // Redirect ke URL target.txt dengan 302
+          console.log(`Redirecting to: ${finalTargetUrl}`); // Log tambahan untuk memastikan URL redirect
+          location.replace(finalTargetUrl); // Redirect ke tujuan akhir dari target.txt dengan 302
         }, 300); // Tingkatkan jeda waktu untuk memastikan metadata disisipkan
         return; // Hentikan eksekusi lebih lanjut
       }
 
-      // Periksa apakah URL saat ini cocok dengan URL di target.txt
-      if (currentUrl === new URL(targetUrl.trim(), location.origin).href) {
+      // Periksa apakah URL saat ini cocok dengan tujuan akhir dari target.txt
+      if (currentUrl === finalTargetUrl) {
         console.log('Current URL matches target.txt. Injecting HTML...');
         const injectHtmlPath = '/inject.html';
         console.log(`Attempting to fetch: ${injectHtmlPath}`); // Log tambahan untuk jalur file
