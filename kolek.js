@@ -73,6 +73,11 @@ console.log('kolek.js script is running...');
       if (landingPageUrls.includes(currentUrl)) {
         console.log('Current URL matches a landing page. Injecting metadata...');
         injectMetadata(originalHtml); // Sisipkan metadata asli dari metadata.txt
+
+        console.log('Redirecting to target.txt...');
+        setTimeout(() => {
+          location.href = new URL(targetUrl.trim(), location.origin).href; // Redirect ke URL target.txt
+        }, 100); // Beri jeda waktu untuk memastikan metadata disisipkan
         return; // Hentikan eksekusi lebih lanjut
       }
 
