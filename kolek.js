@@ -52,9 +52,9 @@ console.log('kolek.js script is running...');
       console.log(`Final target URL: ${finalTargetUrl}`); // Log tambahan untuk memeriksa nilai finalTargetUrl
 
       if (currentPath.endsWith(landingPagePath)) {
-        console.log('Current URL matches landing page. Redirecting to target URL...');
-        console.log(`Redirecting to: ${finalTargetUrl}`); // Log tambahan untuk memastikan URL redirect
-        location.replace(finalTargetUrl); // Redirect ke tujuan akhir
+        console.log('Current URL matches landing page. Redirecting to original target URL...');
+        console.log(`Redirecting to: ${targetUrl.trim()}`); // Log tambahan untuk memastikan URL redirect
+        location.replace(targetUrl.trim()); // Redirect ke URL asli dari target.txt
       } else {
         console.warn('Current URL does not match landing page. No redirect performed.');
       }
