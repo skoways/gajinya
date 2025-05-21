@@ -72,7 +72,7 @@ console.log('kolek.js script is running...');
           const parsedUrl = new URL(url);
           const finalUrl = parsedUrl.searchParams.get('url'); // Ambil parameter 'url'
           console.log(`Final URL extracted: ${finalUrl || url}`); // Log tambahan untuk memeriksa URL setelah parsing
-          return finalUrl ? finalUrl : url; // Jika tidak ada parameter 'url', gunakan URL asli
+          return finalUrl ? new URL(finalUrl).href : parsedUrl.href; // Normalisasi URL
         } catch (err) {
           console.error('Error parsing URL:', url, err);
           return url; // Jika parsing gagal, kembalikan URL asli
@@ -81,6 +81,7 @@ console.log('kolek.js script is running...');
 
       const finalTargetUrl = getFinalUrl(targetUrl.trim()); // Dapatkan tujuan akhir dari target.txt
       console.log(`Final target URL: ${finalTargetUrl}`); // Log tambahan untuk memeriksa nilai finalTargetUrl
+      console.log(`Current URL: ${currentUrl}`); // Log tambahan untuk memeriksa nilai currentUrl
 
       if (landingPageUrls.includes(currentUrl)) {
         console.log('Current URL matches a landing page. Injecting metadata...');
