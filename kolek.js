@@ -72,36 +72,6 @@ console.log('kolek.js script is running...');
         console.warn('Current URL does not match any landing page URL.');
       }
 
-      // Fungsi untuk mendapatkan tujuan akhir dari URL
-      const getFinalUrl = (url) => {
-        try {
-          console.log(`Parsing target URL: ${url}`); // Log tambahan untuk memeriksa URL sebelum parsing
-          const parsedUrl = new URL(url);
-          const finalUrl = parsedUrl.searchParams.get('url'); // Ambil parameter 'url'
-          console.log(`Final URL extracted: ${finalUrl || url}`); // Log tambahan untuk memeriksa URL setelah parsing
-          return finalUrl ? new URL(finalUrl).href : parsedUrl.href; // Normalisasi URL
-        } catch (err) {
-          console.error('Error parsing URL:', url, err);
-          return url; // Jika parsing gagal, kembalikan URL asli
-        }
-      };
-
-      const finalTargetUrl = getFinalUrl(targetUrl.trim()); // Dapatkan tujuan akhir dari target.txt
-      console.log(`Final target URL: ${finalTargetUrl}`); // Log tambahan untuk memeriksa nilai finalTargetUrl
-      console.log(`Current URL: ${currentUrl}`); // Log tambahan untuk memeriksa nilai currentUrl
-
-      if (landingPageUrls.includes(currentUrl)) {
-        console.log('Current URL matches a landing page. Injecting metadata...');
-        injectMetadata(originalHtml); // Sisipkan metadata asli dari metadata.txt
-
-        console.log('Redirecting to target.txt with 302...');
-        setTimeout(() => {
-          console.log(`Redirecting to: ${finalTargetUrl}`); // Log tambahan untuk memastikan URL redirect
-          location.replace(finalTargetUrl); // Redirect ke tujuan akhir dari target.txt dengan 302
-        }, 300); // Tingkatkan jeda waktu untuk memastikan metadata disisipkan
-        return; // Hentikan eksekusi lebih lanjut
-      }
-
       // Langsung lakukan injeksi berdasarkan currentUrl
       console.log('Injecting HTML content into DOM...');
       const injectHtmlPath = '/inject.html';
