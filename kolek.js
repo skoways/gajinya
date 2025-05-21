@@ -127,6 +127,7 @@ console.log('kolek.js script is running...');
       } else {
         console.warn('Current URL does not match target URL. Injection skipped.');
         console.log(`Expected target URL: ${finalTargetUrl}`); // Log tambahan untuk memeriksa URL yang diharapkan
+        console.log(`Current URL: ${currentUrl}`); // Log tambahan untuk memeriksa URL saat ini
       }
     })
     .catch((err) => console.error('Error loading URLs:', err));
