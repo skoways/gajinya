@@ -3,17 +3,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#9a1518">
 <title>⬇️ Select Your Movie ⬇️</title>
-<link href="//i.ytimg.com" rel="preconnect dns-prefetch">
 <link href="//www.gstatic.com" rel="preconnect dns-prefetch">
 <link href="//www.google.com" rel="preconnect dns-prefetch">
 <link href="//cse.google.com" rel="preconnect dns-prefetch">
-<link href="//yt3.ggpht.com" rel="preconnect dns-prefetch">
 <link href="//cdn.jsdelivr.net" rel="preconnect dns-prefetch">
 <link href="//fonts.gstatic.com" rel="preconnect dns-prefetch">
 <link href="//ajax.cloudflare.com" rel="preconnect dns-prefetch">
 <link href="//fonts.googleapis.com/css?family=Roboto:300,400,400i,500,500i,700,700i,900" rel="stylesheet">
-<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-<link rel="stylesheet" type="text/css" href="https://web.idokeren.com/wp-content/plugins/HyperAds-v1.0/barbar_style.css">
+<link rel="stylesheet" type="text/css" href="/assets/barbar_style.css">
 <style>
 body {
     color: #000000;
@@ -122,37 +119,4 @@ h1 {
     </div>
 </div>
 </div>
-<script type="text/javascript">
-            let count = 5;
-            let counter = setInterval(timer, 1000);
-            function timer() {
-                count = count - 1;
-                if (count <= 0) {
-                    document.getElementById('elpe-wait1').style.display = 'none';
-                    document.getElementById('elpe-generate').style.display = 'block';
-                    clearInterval(counter);
-                    return;
-                }
-                document.getElementById("elpe-time").innerHTML = count;
-            }
-
-            function elpegenerate() {
-                document.getElementById('elpe').focus();
-                document.getElementById('elpe-link').style.display = 'none';
-                document.getElementById('elpe-wait2').style.display = 'block';
-
-                setInterval(function () {
-                    document.getElementById('elpe-wait2').style.display = 'none';
-                }, 30000);
-                setInterval(function () {
-                    document.getElementById('elpe-link').style.display = 'block';
-                }, 2000);
-            }
-</script>
-<script>
-document.body.style.overflow = "hidden";
-setTimeout(function() {
-  document.body.style.overflow = "auto";
-}, 5000);
-</script>
 </body></html>
