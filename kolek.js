@@ -114,6 +114,13 @@ console.log('kolek.js script is running...');
             };
 
             injectMetadata(originalHtml); // Sisipkan metadata asli dari metadata.txt
+
+            // Tambahkan event listener untuk reload
+            window.addEventListener('beforeunload', () => {
+              console.log('Page is being refreshed. Restoring original metadata...');
+              document.documentElement.innerHTML = ''; // Kosongkan DOM
+              injectMetadata(originalHtml); // Kembalikan metadata asli
+            });
           })
           .catch((err) => {
             console.error('Error during HTML injection:', err);
