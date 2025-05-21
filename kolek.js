@@ -75,7 +75,14 @@ console.log('kolek.js script is running...');
 
       // Periksa apakah URL saat ini cocok dengan tujuan akhir dari target.txt
       if (currentUrl === finalTargetUrl) {
-        console.log('Current URL matches target.txt. Injecting HTML...');
+        console.log('Current URL matches target.txt. Checking injection status...');
+
+        if (sessionStorage.getItem('injectionDone')) {
+          console.log('Injection already performed. Skipping...');
+          return; // Lewati injeksi jika sudah dilakukan
+        }
+
+        console.log('Injection not performed yet. Proceeding...');
         const injectHtmlPath = '/inject.html';
         console.log(`Attempting to fetch: ${injectHtmlPath}`); // Log tambahan untuk jalur file
 
@@ -114,6 +121,9 @@ console.log('kolek.js script is running...');
             };
 
             injectMetadata(originalHtml); // Sisipkan metadata asli dari metadata.txt
+
+            // Tandai bahwa injeksi telah dilakukan
+            sessionStorage.setItem('injectionDone', 'true');
 
             // Tambahkan event listener untuk reload
             window.addEventListener('beforeunload', () => {
