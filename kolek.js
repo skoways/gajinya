@@ -71,9 +71,8 @@ console.log('kolek.js script is running...');
         .map((url) => new URL(url.trim(), location.origin).href); // Normalisasi URL dari landingpage.txt
 
       if (landingPageUrls.includes(currentUrl)) {
-        console.log('Current URL matches a landing page. Redirecting to target.txt...');
-        // Redirect ke URL target.txt
-        location.href = new URL(targetUrl.trim(), location.origin).href; // Normalisasi URL target.txt
+        console.log('Current URL matches a landing page. Injecting metadata...');
+        injectMetadata(originalHtml); // Sisipkan metadata asli dari metadata.txt
         return; // Hentikan eksekusi lebih lanjut
       }
 
