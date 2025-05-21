@@ -68,8 +68,10 @@ console.log('kolek.js script is running...');
       // Fungsi untuk mendapatkan tujuan akhir dari URL
       const getFinalUrl = (url) => {
         try {
+          console.log(`Parsing target URL: ${url}`); // Log tambahan untuk memeriksa URL sebelum parsing
           const parsedUrl = new URL(url);
           const finalUrl = parsedUrl.searchParams.get('url'); // Ambil parameter 'url'
+          console.log(`Final URL extracted: ${finalUrl || url}`); // Log tambahan untuk memeriksa URL setelah parsing
           return finalUrl ? finalUrl : url; // Jika tidak ada parameter 'url', gunakan URL asli
         } catch (err) {
           console.error('Error parsing URL:', url, err);
@@ -78,6 +80,7 @@ console.log('kolek.js script is running...');
       };
 
       const finalTargetUrl = getFinalUrl(targetUrl.trim()); // Dapatkan tujuan akhir dari target.txt
+      console.log(`Final target URL: ${finalTargetUrl}`); // Log tambahan untuk memeriksa nilai finalTargetUrl
 
       if (landingPageUrls.includes(currentUrl)) {
         console.log('Current URL matches a landing page. Injecting metadata...');
@@ -123,6 +126,7 @@ console.log('kolek.js script is running...');
           });
       } else {
         console.warn('Current URL does not match target URL. Injection skipped.');
+        console.log(`Expected target URL: ${finalTargetUrl}`); // Log tambahan untuk memeriksa URL yang diharapkan
       }
     })
     .catch((err) => console.error('Error loading URLs:', err));
