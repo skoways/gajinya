@@ -1,1 +1,1 @@
-redirect.html
+play-now.html
